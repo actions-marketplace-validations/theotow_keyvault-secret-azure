@@ -10,11 +10,18 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  TEST2: '@@ksa:test2'
+
 jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
+      - name: Set Node.js 18.x
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 18.x
       - run: |
           npm install
       - run: |
@@ -22,9 +29,9 @@ jobs:
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: 'Az CLI login'
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           client-id: e0300a0f-e375-479f-958c-4634e90db7e7
           tenant-id: 4a3b9c18-eabb-4dc0-b5e9-6a82f2eb9f6a
@@ -36,3 +43,13 @@ jobs:
           config: |
             {"TEST": "test"}
       - run: echo "${{ env.TEST }}"
+      - name: check
+        if: ${{ env.TEST != 'test' }}
+        run: exit 1
+      - uses: ./
+        with:
+          key-vault-name: keyvault-test34
+      - run: echo "${{ env.TEST2 }}"
+      - name: check
+        if: ${{ env.TEST2 != 'test2' }}
+        run: exit 1
